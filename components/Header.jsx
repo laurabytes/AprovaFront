@@ -52,7 +52,6 @@ export function Header({
   );
 }
 
-// Verificação de tipos com PropTypes
 Header.propTypes = {
   title: PropTypes.string,
   showBackButton: PropTypes.bool,
@@ -63,7 +62,6 @@ Header.propTypes = {
   onBackPress: PropTypes.func,
 };
 
-// Valores padrão para as props
 Header.defaultProps = {
   title: '',
   showBackButton: false,
@@ -71,7 +69,7 @@ Header.defaultProps = {
   showProgress: false,
   currentStep: 1,
   totalSteps: 5,
-  onBackPress: () => {}, // Função vazia para evitar erros se não for passada
+  onBackPress: () => {}, 
 };
 
 const styles = StyleSheet.create({
@@ -101,7 +99,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'absolute',
     left: '50%',
-    transform: [{ translateX: -25 }], // Ajuste conforme a quantidade de bolinhas
+    transform: [{ translateX: -25 }], 
   },
   progressDot: {
     width: 8,
