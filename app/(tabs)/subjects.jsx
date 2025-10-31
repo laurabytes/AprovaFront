@@ -1,36 +1,26 @@
-import { Check, Pencil, Trash2, X } from 'lucide-react-native';
-import React, { useRef, useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, { useState, useRef, useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList, Alert, Modal, Pressable } from 'react-native';
+import { Pencil, Trash2, Check, X } from 'lucide-react-native';
 import ColorPicker from 'react-native-wheel-color-picker';
-import { Card } from '../../components/Card';
 import { Header } from '../../components/Header';
-import { subjects as initialSubjects } from '../../data/mockData';
+import { Card } from '../../components/Card';
 import { colors, fonts, spacing } from '../../theme/colors';
 import { commonStyles } from '../../theme/styles';
+import { SubjectsContext } from '../../context/SubjectsContext'; // Importa o contexto
 
 export default function SubjectsScreen() {
-  const [subjects, setSubjects] = useState(initialSubjects);
+  // Pega a lista de matérias e a função para atualizá-la do contexto central
+  const { subjects, setSubjects } = useContext(SubjectsContext);
+
   const [subjectName, setSubjectName] = useState('');
   const [subjectColor, setSubjectColor] = useState('#FFD6E5');
-
-  const [editingSubject, setEditingSubject] = useState(null); 
-
+  const [editingSubject, setEditingSubject] = useState(null);
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
   const [currentColor, setCurrentColor] = useState(subjectColor);
-  const [colorTarget, setColorTarget] = useState(null); 
+  const [colorTarget, setColorTarget] = useState(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const touchableRefs = useRef({});
+  const addColorRef = React.createRef();
 
   const openColorPicker = (target, initialColor, ref) => {
     ref.current.measure((fx, fy, width, height, px, py) => {
@@ -45,46 +35,33 @@ export default function SubjectsScreen() {
     if (colorTarget === 'add') {
       setSubjectColor(currentColor);
     } else if (colorTarget === 'edit') {
-       setEditingSubject({ ...editingSubject, color: currentColor });
+      setEditingSubject({ ...editingSubject, color: currentColor });
     }
     setColorPickerVisible(false);
   };
-  
-  const handleEditPress = (subject) => {
-    setEditingSubject({ ...subject }); 
-  };
 
+  const handleEditPress = (subject) => setEditingSubject({ ...subject });
+  const handleCancelEdit = () => setEditingSubject(null);
+  
   const handleUpdateSubject = () => {
     setSubjects(currentSubjects => 
-        currentSubjects.map(s => (s.id === editingSubject.id ? editingSubject : s))
+      currentSubjects.map(s => (s.id === editingSubject.id ? editingSubject : s))
     );
-    setEditingSubject(null);
-  };
-
-  const handleCancelEdit = () => {
     setEditingSubject(null);
   };
 
   const handleDeletePress = (subjectIdToDelete) => {
-    Alert.alert(
-      'Confirmar Exclusão',
-      'Você tem certeza que deseja excluir esta matéria?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: () => {
-
-            setSubjects(currentSubjects => 
-              currentSubjects.filter(subject => subject.id !== subjectIdToDelete)
-            );
-          },
+    Alert.alert('Confirmar Exclusão', 'Deseja mesmo excluir esta matéria?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: () => {
+          setSubjects(currentSubjects => 
+            currentSubjects.filter(subject => subject.id !== subjectIdToDelete)
+          );
         },
-      ]
-    );
+      },
+    ]);
   };
-  
+
   const handleAddSubject = () => {
     if (subjectName.trim() === '') {
       Alert.alert('Erro', 'O nome da matéria não pode ser vazio.');
@@ -103,7 +80,7 @@ export default function SubjectsScreen() {
       return (
         <Card style={[styles.subjectCard, { backgroundColor: editingSubject.color }]}>
           <View style={styles.subjectInfo}>
-            <TextInput style={styles.editInput} value={editingSubject.name} onChangeText={(text) => setEditingSubject({...editingSubject, name: text})} autoFocus />
+            <TextInput style={styles.editInput} value={editingSubject.name} onChangeText={(text) => setEditingSubject({ ...editingSubject, name: text })} autoFocus />
             <TouchableOpacity ref={touchableRefs.current[item.id]} onPress={() => openColorPicker('edit', editingSubject.color, touchableRefs.current[item.id])}>
               <Text style={styles.changeColorText}>Alterar cor</Text>
             </TouchableOpacity>
@@ -129,16 +106,13 @@ export default function SubjectsScreen() {
       </Card>
     );
   };
-  
-  const addColorRef = React.createRef();
 
   return (
     <View style={commonStyles.container}>
       <Header showBackButton showProgress currentStep={3} totalSteps={5} />
       <ScrollView style={commonStyles.screenPadding} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Minhas Matérias</Text>
-        <Text style={styles.subtitle}>Gerencie suas disciplinas de estudo.</Text>
-
+        {/* ... O resto do seu JSX permanece igual ... */}
         <Card>
           <Text style={styles.cardTitle}>Adicionar Matéria</Text>
           <Text style={styles.label}>Nome</Text>
@@ -150,20 +124,16 @@ export default function SubjectsScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.addButton} onPress={handleAddSubject}><Text style={styles.addButtonText}>Adicionar</Text></TouchableOpacity>
         </Card>
-
         <FlatList data={subjects} keyExtractor={(item) => item.id} scrollEnabled={false} renderItem={renderSubjectItem} />
         <View style={{ height: spacing.xl }} />
       </ScrollView>
-
       <Modal visible={isColorPickerVisible} transparent={true} animationType="fade" onRequestClose={() => setColorPickerVisible(false)}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setColorPickerVisible(false)} />
         <View style={[styles.popoverContainer, popoverPosition]}>
           <View style={styles.colorPickerWrapper}>
             <ColorPicker color={currentColor} onColorChange={setCurrentColor} thumbSize={25} sliderSize={25} noSnap={true} row={false} swatches={false} />
           </View>
-           <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmColor}>
-              <Text style={styles.confirmButtonText}>Confirmar</Text>
-            </TouchableOpacity>
+          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmColor}><Text style={styles.confirmButtonText}>Confirmar</Text></TouchableOpacity>
         </View>
       </Modal>
     </View>
